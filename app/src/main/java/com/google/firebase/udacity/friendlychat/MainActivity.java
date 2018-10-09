@@ -16,10 +16,12 @@
 package com.google.firebase.udacity.friendlychat;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -29,6 +31,14 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.Toast;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +59,10 @@ public class MainActivity extends AppCompatActivity {
 
     private String mUsername;
 
+    private FirebaseDatabase mFirebaseDatabase;
+    private DatabaseReference mMessagesDatabaseReference;
+    private FirebaseAuth mAuth;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,6 +70,37 @@ public class MainActivity extends AppCompatActivity {
 
         mUsername = ANONYMOUS;
 
+        mFirebaseDatabase = FirebaseDatabase.getInstance();
+        mMessagesDatabaseReference = mFirebaseDatabase.getReference().child("messages");
+        mAuth = FirebaseAuth.getInstance();
+
+        // Check to see if the user is signed in
+        @Override
+        public void onStart () {
+            super.onStart();
+            // Check if user is signed in (non-null) and update UI accordingly.
+            FirebaseUser currentUser = mAuth.getCurrentUser();
+            updateUI(currentUser);
+        }
+
+        // Sign in as an anonymous user
+        mAuth.signInAnonymously()
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>()){
+            @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                if (task.isSuccessful()){
+                    // Sign in success, update UI with the signed-in user's information
+                    Log.d(TAG, "signInAnonymously:success");
+                    updateUI(user);
+                } else {
+                    // If sign in fails, display a message to the user.
+                    Log.w(TAG,"signInAnonymously:failure", task.getException());
+                    Toast.makeText(AnonymousAuthActivity.this, "Authentication failed."),
+                    Toast.LENGTH_SHORT.show();
+                    updateUI(null);
+                }
+            }
+        }
         // Initialize references to views
         mProgressBar = findViewById(R.id.progressBar);
         mMessageListView = findViewById(R.id.messageListView);
@@ -104,7 +149,9 @@ public class MainActivity extends AppCompatActivity {
         mSendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // TODO: Send messages on click
+                FriendlyMessage friendlyMessage = new FriendlyMessage(mMessageEditText.getText().
+                        toString(), mUsername, null);
+                mMessagesDatabaseReference.push().setValue(friendlyMessage);
 
                 // Clear input box
                 mMessageEditText.setText("");
