@@ -74,33 +74,6 @@ public class MainActivity extends AppCompatActivity {
         mMessagesDatabaseReference = mFirebaseDatabase.getReference().child("messages");
         mAuth = FirebaseAuth.getInstance();
 
-        // Check to see if the user is signed in
-        @Override
-        public void onStart () {
-            super.onStart();
-            // Check if user is signed in (non-null) and update UI accordingly.
-            FirebaseUser currentUser = mAuth.getCurrentUser();
-            updateUI(currentUser);
-        }
-
-        // Sign in as an anonymous user
-        mAuth.signInAnonymously()
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>()){
-            @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                if (task.isSuccessful()){
-                    // Sign in success, update UI with the signed-in user's information
-                    Log.d(TAG, "signInAnonymously:success");
-                    updateUI(user);
-                } else {
-                    // If sign in fails, display a message to the user.
-                    Log.w(TAG,"signInAnonymously:failure", task.getException());
-                    Toast.makeText(AnonymousAuthActivity.this, "Authentication failed."),
-                    Toast.LENGTH_SHORT.show();
-                    updateUI(null);
-                }
-            }
-        }
         // Initialize references to views
         mProgressBar = findViewById(R.id.progressBar);
         mMessageListView = findViewById(R.id.messageListView);
